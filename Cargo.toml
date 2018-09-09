@@ -1,0 +1,6 @@
+[package]
+name = "genestring"
+version = "0.1.0"
+authors = ["Joshua Cearley <joshua.cearley@gmail.com>"]
+
+[dependencies]
