@@ -102,12 +102,27 @@ impl Genestring {
     // Assigns bits at a given offset through offset+bits to the given value.
     // The assumed usage of this function is to implement mutation.
     pub fn set(&mut self, offset: usize, bits: usize, value: usize) {
+        // safety dance
+        if bits > 64 {
+            panic!("Can only write 64 bits at a time!");
+        }
+
+        if bits + offset > self.bit_len() {
+            panic!("Requested bits are out of bounds!");
+        }
+
         unimplemented!();
     }
 
     // Copies bits starting from a given offset, up to offset+bits, from a donor genestring to this one.
     // The assumed usage of this function is to implement crossover between generations.
     pub fn transplant(&mut self, donor: &mut Genestring, offset: usize, bits: usize) {
+        let end = bits + offset;
+
+        if end > self.bit_len() || end > donor.bit_len() {
+            panic!("Requested bits are out of bounds!");
+        }
+        
         unimplemented!();
     }
 }
