@@ -2,6 +2,8 @@
 pub const PIECE_SIZE_IN_BYTES: usize = 8;
 pub const PIECE_SIZE_IN_BITS: usize  = 64;
 
+const PANIC_OUT_OF_BOUNDS: &str = "Requested bits are out of bounds!";
+
 #[derive(Default)]
 pub struct Genestring {
     pieces: Vec<u64>,
@@ -43,7 +45,7 @@ impl Genestring {
         }
 
         if bits + offset > self.bit_len() {
-            panic!("Requested bits are out of bounds!");
+            panic!(PANIC_OUT_OF_BOUNDS);
         }
 
         // safety dance complete, now figure out which pieces have our bits
@@ -108,7 +110,7 @@ impl Genestring {
         }
 
         if bits + offset > self.bit_len() {
-            panic!("Requested bits are out of bounds!");
+            panic!(PANIC_OUT_OF_BOUNDS);
         }
 
         unimplemented!();
@@ -120,9 +122,9 @@ impl Genestring {
         let end = bits + offset;
 
         if end > self.bit_len() || end > donor.bit_len() {
-            panic!("Requested bits are out of bounds!");
+            panic!(PANIC_OUT_OF_BOUNDS);
         }
-        
+
         unimplemented!();
     }
 }
