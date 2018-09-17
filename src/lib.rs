@@ -49,8 +49,8 @@ impl Genestring {
         }
 
         // safety dance complete, now figure out which pieces have our bits
-        let first_half_idx  = offset / PIECE_SIZE_IN_BYTES;
-        let second_half_idx = (bits + offset) / PIECE_SIZE_IN_BYTES;
+        let first_half_idx  = offset / PIECE_SIZE_IN_BITS;
+        let second_half_idx = (bits + offset) / PIECE_SIZE_IN_BITS;
 
         let mut result: u64 = 0;
 
@@ -81,11 +81,12 @@ impl Genestring {
             // in this path, all requested bits are within a single piece
             let piece = self.pieces[first_half_idx];
 
+            let mut mask = 0;
             for i in offset..(offset+bits) {
-                let mask = 1 << i;
-                result <<= 1;
-                result += (piece & mask) >> i;
+                mask += 1 << i;
             }
+
+            result = (piece & mask) >> offset;
         }
 
         result
@@ -113,7 +114,25 @@ impl Genestring {
             panic!(PANIC_OUT_OF_BOUNDS);
         }
 
-        unimplemented!();
+        let first_half_idx  = offset / PIECE_SIZE_IN_BITS;
+        let second_half_idx = (bits + offset) / PIECE_SIZE_IN_BITS;
+
+        let mut source_mask = 0;
+
+        let offset_modulo = offset % PIECE_SIZE_IN_BITS;
+
+        if first_half_idx == second_half_idx {
+            // in this path, we are just writing to bits inside the same integer
+            for i in 1..=bits {
+                source_mask += 1 << i;
+            }
+
+            let destination_mask = source_mask << offset_modulo;
+
+            self.pieces[first_half_idx] = (self.pieces[first_half_idx] & !destination_mask) + ((value as u64 & source_mask) << offset_modulo);
+        } else {
+            unimplemented!();
+        }
     }
 
     // Copies bits starting from a given offset, up to offset+bits, from a donor genestring to this one.
@@ -161,5 +180,16 @@ mod tests {
         }
 
         assert_eq!(total, bits);
+    }
+
+    #[test]
+    fn get_set() {
+        assert_eq!(PIECE_SIZE_IN_BITS, 64);
+        let mut gs = Genestring::with_bits(32);
+
+        eprintln!("{:?}", gs);
+        gs.set(8, 12, 842);
+        eprintln!("{:?}", gs);
+        assert_eq!(gs.get(8, 12), 842);
     }
 }
