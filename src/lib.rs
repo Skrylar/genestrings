@@ -4,7 +4,7 @@ pub const PIECE_SIZE_IN_BITS: usize  = 64;
 
 const PANIC_OUT_OF_BOUNDS: &str = "Requested bits are out of bounds!";
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Genestring {
     pieces: Vec<u64>,
 }
