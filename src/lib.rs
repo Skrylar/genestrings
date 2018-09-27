@@ -1,3 +1,4 @@
+#[macro_use] extern crate proptest;
 
 pub const PIECE_SIZE_IN_BYTES: u64 = 8;
 pub const PIECE_SIZE_IN_BITS: u64  = 64;
@@ -77,19 +78,22 @@ impl Genestring {
                 result_b += piece & mask;
             }
 
-            result_b <<= stop;
+            result_b <<= bits - stop;
 
             result |= result_b;
         } else {
-            // in this path, all requested bits are within a single piece
-            let piece = self.pieces[first_half_idx];
+            let first_half  = self.pieces[first_half_idx];
 
-            let mut mask = 0;
-            for i in offset..(offset+bits) {
-                mask += 1 << i;
+            let start = offset % PIECE_SIZE_IN_BITS;
+            let stop  = start + bits;
+
+            let piece = first_half;
+            for i in start..stop {
+                let mask = 1 << i;
+                result += piece & mask;
             }
 
-            result = (piece & mask) >> offset;
+            result >>= start;
         }
 
         result
@@ -126,7 +130,7 @@ impl Genestring {
 
         if first_half_idx == second_half_idx {
             // in this path, we are just writing to bits inside the same integer
-            for i in 1..=bits {
+            for i in 0..bits {
                 source_mask += 1 << i;
             }
 
@@ -161,9 +165,9 @@ impl Genestring {
                 piece_mask += 1 << i;
                 value_mask = (value_mask << 1) + 1;
             }
-            value_mask <<= stop;
+            value_mask <<= bits - stop;
 
-            self.pieces[second_half_idx] = (piece & !piece_mask) | ((value as u64 & value_mask) >> stop);
+            self.pieces[second_half_idx] = (piece & !piece_mask) | ((value as u64 & value_mask) >> (bits - stop));
         }
     }
 
@@ -241,5 +245,25 @@ mod tests {
         assert_eq!(gs.pieces[0], 0xF000000000000000);
         assert_eq!(gs.pieces[1], 0x000000000000000F);
         assert_eq!(gs.get(60, 8), 0xFF);
+    }
+
+    proptest! {
+        #[test]
+        fn get_set_single(start in 0..96, len in 1..32, value: u32) {
+            // we're going to get and set values at various offsets and make sure we always get
+            // back the thing we wanted to start with
+
+            assert_eq!(PIECE_SIZE_IN_BITS, 64);
+            let mut gs = Genestring::with_bits(128);
+
+            let mut band: u64 = 0;
+            for i in 0..len {
+                band += 1 << i;
+            }
+
+            let banded_value = value as u64 & band;
+            gs.set(start as u64, len as u64, banded_value);
+            prop_assert_eq!(gs.get(start as u64, len as u64), banded_value);
+        }
     }
 }
