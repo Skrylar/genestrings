@@ -275,7 +275,23 @@ mod tests {
             // and ensure they do not trample one another.
 
             assert_eq!(PIECE_SIZE_IN_BITS, 64);
-            let mut gs = Genestring::with_bits(256);
+            let mut gs = Genestring::with_bits(64);
+
+            gs.set(a as u64, 16, value_a as u64);
+            gs.set(b as u64, 16, value_b as u64);
+
+            prop_assert_eq!(gs.get(a as u64, 16), value_a as u64);
+            prop_assert_eq!(gs.get(b as u64, 16), value_b as u64);
+        }
+
+        #[test]
+        fn get_set_multibinning(a in 0..16, b in 32..100, value_a: u16, value_b: u16) {
+            // We have one value which is always in the first piece, and a second value which
+            // can span any non-overlap location in either piece. Ensures our single and double
+            // piece logics don't conflict.
+
+            assert_eq!(PIECE_SIZE_IN_BITS, 64);
+            let mut gs = Genestring::with_bits(128);
 
             gs.set(a as u64, 16, value_a as u64);
             gs.set(b as u64, 16, value_b as u64);
