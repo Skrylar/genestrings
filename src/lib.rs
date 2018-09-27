@@ -1,6 +1,6 @@
 
-pub const PIECE_SIZE_IN_BYTES: usize = 8;
-pub const PIECE_SIZE_IN_BITS: usize  = 64;
+pub const PIECE_SIZE_IN_BYTES: u64 = 8;
+pub const PIECE_SIZE_IN_BITS: u64  = 64;
 
 const PANIC_OUT_OF_BOUNDS: &str = "Requested bits are out of bounds!";
 
@@ -9,26 +9,24 @@ pub struct Genestring {
     pieces: Vec<u64>,
 }
 
-// XXX i suppose our 'as usize' stuff might not be platform safe; 32-bit platforms might have issues?
-
 impl Genestring {
     /// Creates a gene string capable of holding at least `count` bits.
     pub fn with_bits(count: u64) -> Genestring {
         let mut result = Genestring{
             pieces: Vec::with_capacity(count as usize),
         };
-        result.pieces.resize(((count as usize / PIECE_SIZE_IN_BITS) + 1) as usize, 0);
+        result.pieces.resize(((count / PIECE_SIZE_IN_BITS) + 1) as usize, 0);
         result
     }
 
     // Returns the number of bits in the gene string.
     pub fn bit_len(&self) -> usize {
-        self.pieces.len() * PIECE_SIZE_IN_BITS
+        self.pieces.len() * PIECE_SIZE_IN_BITS as usize
     }
 
     // Returns the number of bytes in the gene string.
     pub fn byte_len(&self) -> usize {
-        self.pieces.len() * PIECE_SIZE_IN_BYTES
+        self.pieces.len() * PIECE_SIZE_IN_BYTES as usize
     }
 
     // Returns the number of integer parts of the gene string.
@@ -38,19 +36,19 @@ impl Genestring {
 
     // Retrieves `bits` number of bits from the string, starting at a given `offset`. Panics if
     // `bits` is larger than 64 or would otherwise go outside the bounds of the string.
-    pub fn get(&self, offset: usize, bits: usize) -> u64 {
+    pub fn get(&self, offset: u64, bits: u64) -> u64 {
         // safety dance
         if bits > 64 {
             panic!("Can only obtain 64 bits at a time!");
         }
 
-        if bits + offset > self.bit_len() {
+        if bits + offset > self.bit_len() as u64 {
             panic!(PANIC_OUT_OF_BOUNDS);
         }
 
         // safety dance complete, now figure out which pieces have our bits
-        let first_half_idx  = offset / PIECE_SIZE_IN_BITS;
-        let second_half_idx = (bits + offset) / PIECE_SIZE_IN_BITS;
+        let first_half_idx  = (offset / PIECE_SIZE_IN_BITS) as usize;
+        let second_half_idx = ((bits + offset) / PIECE_SIZE_IN_BITS) as usize;
 
         let mut result: u64 = 0;
         let mut result_b: u64 = 0;
@@ -109,18 +107,18 @@ impl Genestring {
 
     // Assigns bits at a given offset through offset+bits to the given value.
     // The assumed usage of this function is to implement mutation.
-    pub fn set(&mut self, offset: usize, bits: usize, value: usize) {
+    pub fn set(&mut self, offset: u64, bits: u64, value: u64) {
         // safety dance
         if bits > 64 {
             panic!("Can only write 64 bits at a time!");
         }
 
-        if bits + offset > self.bit_len() {
+        if bits + offset > self.bit_len() as u64 {
             panic!(PANIC_OUT_OF_BOUNDS);
         }
 
-        let first_half_idx  = offset / PIECE_SIZE_IN_BITS;
-        let second_half_idx = (bits + offset) / PIECE_SIZE_IN_BITS;
+        let first_half_idx  = (offset / PIECE_SIZE_IN_BITS) as usize;
+        let second_half_idx = ((bits + offset) / PIECE_SIZE_IN_BITS) as usize;
 
         let mut source_mask = 0;
 
@@ -171,10 +169,10 @@ impl Genestring {
 
     // Copies bits starting from a given offset, up to offset+bits, from a donor genestring to this one.
     // The assumed usage of this function is to implement crossover between generations.
-    pub fn transplant(&mut self, donor: &mut Genestring, offset: usize, bits: usize) {
+    pub fn transplant(&mut self, donor: &mut Genestring, offset: u64, bits: u64) {
         let end = bits + offset;
 
-        if end > self.bit_len() || end > donor.bit_len() {
+        if end > self.bit_len() as u64 || end > donor.bit_len() as u64 {
             panic!(PANIC_OUT_OF_BOUNDS);
         }
 
@@ -191,8 +189,8 @@ mod tests {
     #[test]
     fn calculating_string_size() {
         // just making sure this bit of math works as we expect it to
-        assert_eq!(((7 as usize / PIECE_SIZE_IN_BITS) + 1), 1);
-        assert_eq!(((70 as usize / PIECE_SIZE_IN_BITS) + 1), 2);
+        assert_eq!(((7 / PIECE_SIZE_IN_BITS) + 1), 1);
+        assert_eq!(((70 / PIECE_SIZE_IN_BITS) + 1), 2);
     }
 
     #[test]
