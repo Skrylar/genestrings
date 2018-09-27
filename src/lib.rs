@@ -247,6 +247,9 @@ mod tests {
         assert_eq!(gs.get(60, 8), 0xFF);
     }
 
+    // proptest does some more intensive checks to ensure things like split numbers always work
+    // or we don't trample non-overlapping numbers doing arithmetic.
+
     proptest! {
         #[test]
         fn get_set_single(start in 0..192, len in 1..64, value: u64) {
@@ -264,6 +267,21 @@ mod tests {
             let banded_value = value as u64 & band;
             gs.set(start as u64, len as u64, banded_value);
             prop_assert_eq!(gs.get(start as u64, len as u64), banded_value);
+        }
+
+        #[test]
+        fn get_set_1piece_duo(a in 0..16, b in 32..64, value_a: u16, value_b: u16) {
+            // We are going to store two values within the same piece, guaranteed not to overlap,
+            // and ensure they do not trample one another.
+
+            assert_eq!(PIECE_SIZE_IN_BITS, 64);
+            let mut gs = Genestring::with_bits(256);
+
+            gs.set(a as u64, 16, value_a as u64);
+            gs.set(b as u64, 16, value_b as u64);
+
+            prop_assert_eq!(gs.get(a as u64, 16), value_a as u64);
+            prop_assert_eq!(gs.get(b as u64, 16), value_b as u64);
         }
     }
 }
