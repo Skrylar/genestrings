@@ -249,12 +249,12 @@ mod tests {
 
     proptest! {
         #[test]
-        fn get_set_single(start in 0..96, len in 1..32, value: u32) {
+        fn get_set_single(start in 0..192, len in 1..64, value: u64) {
             // we're going to get and set values at various offsets and make sure we always get
             // back the thing we wanted to start with
 
             assert_eq!(PIECE_SIZE_IN_BITS, 64);
-            let mut gs = Genestring::with_bits(128);
+            let mut gs = Genestring::with_bits(256);
 
             let mut band: u64 = 0;
             for i in 0..len {
