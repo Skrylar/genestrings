@@ -53,6 +53,7 @@ impl Genestring {
         let second_half_idx = (bits + offset) / PIECE_SIZE_IN_BITS;
 
         let mut result: u64 = 0;
+        let mut result_b: u64 = 0;
 
         if first_half_idx != second_half_idx {
             let first_half  = self.pieces[first_half_idx];
@@ -64,19 +65,23 @@ impl Genestring {
             let piece = first_half;
             for i in start..stop {
                 let mask = 1 << i;
-                result <<= 1;
-                result += (piece & mask) >> i;
+                result += piece & mask;
             }
 
-            let stop  = bits - (stop - start);;
+            result >>= start;
+
+            let stop  = bits - (stop - start);
             let start = 0;
 
             let piece = second_half;
             for i in start..stop {
                 let mask = 1 << i;
-                result <<= 1;
-                result += (piece & mask) >> i;
+                result_b += piece & mask;
             }
+
+            result_b <<= stop;
+
+            result |= result_b;
         } else {
             // in this path, all requested bits are within a single piece
             let piece = self.pieces[first_half_idx];
@@ -131,7 +136,36 @@ impl Genestring {
 
             self.pieces[first_half_idx] = (self.pieces[first_half_idx] & !destination_mask) + ((value as u64 & source_mask) << offset_modulo);
         } else {
-            unimplemented!();
+            let first_half  = self.pieces[first_half_idx];
+            let second_half = self.pieces[second_half_idx];
+
+            let start = offset % PIECE_SIZE_IN_BITS;
+            let stop  = PIECE_SIZE_IN_BITS;
+
+            let piece = first_half;
+            let mut piece_mask = 0;
+            let mut value_mask = 0;
+
+            for i in start..stop {
+                piece_mask += 1 << i;
+                value_mask = (value_mask << 1) + 1;
+            }
+
+            self.pieces[first_half_idx] = (piece & !piece_mask) | ((value as u64 & value_mask) << start);
+
+            let stop  = bits - (stop - start);
+            let start = 0;
+
+            let piece = second_half;
+            piece_mask = 0;
+            value_mask = 0;
+            for i in start..stop {
+                piece_mask += 1 << i;
+                value_mask = (value_mask << 1) + 1;
+            }
+            value_mask <<= stop;
+
+            self.pieces[second_half_idx] = (piece & !piece_mask) | ((value as u64 & value_mask) >> stop);
         }
     }
 
@@ -143,6 +177,9 @@ impl Genestring {
         if end > self.bit_len() || end > donor.bit_len() {
             panic!(PANIC_OUT_OF_BOUNDS);
         }
+
+        let first_half_idx  = offset / PIECE_SIZE_IN_BITS;
+        let second_half_idx = (bits + offset) / PIECE_SIZE_IN_BITS;
 
         unimplemented!();
     }
@@ -182,8 +219,10 @@ mod tests {
         assert_eq!(total, bits);
     }
 
+    // These two tests are very basic idiot tests, but are no means exhaustive.
+
     #[test]
-    fn get_set() {
+    fn get_set_same_chunk() {
         assert_eq!(PIECE_SIZE_IN_BITS, 64);
         let mut gs = Genestring::with_bits(32);
 
@@ -191,5 +230,18 @@ mod tests {
         gs.set(8, 12, 842);
         eprintln!("{:?}", gs);
         assert_eq!(gs.get(8, 12), 842);
+    }
+
+    #[test]
+    fn get_set_different_chunk() {
+        assert_eq!(PIECE_SIZE_IN_BITS, 64);
+        let mut gs = Genestring::with_bits(128);
+
+        eprintln!("{:?}", gs);
+        gs.set(60, 8, 0xFF);
+        eprintln!("{:?}", gs);
+        assert_eq!(gs.pieces[0], 0xF000000000000000);
+        assert_eq!(gs.pieces[1], 0x000000000000000F);
+        assert_eq!(gs.get(60, 8), 0xFF);
     }
 }
