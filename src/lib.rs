@@ -209,15 +209,6 @@ impl Genestring {
 #[cfg(test)]
 mod tests {
     use ::*;
-    #[test]
-    fn calculating_string_size() {
-        // just making sure this bit of math works as we expect it to
-        assert_eq!(PIECE_SIZE_IN_BITS, 64);
-        assert_eq!(part_count_for_bits(7),   1);
-        assert_eq!(part_count_for_bits(64),  1);
-        assert_eq!(part_count_for_bits(128), 2);
-        assert_eq!(part_count_for_bits(70),  2);
-    }
 
     #[test]
     fn calculating_bi_offsets() {
@@ -269,10 +260,31 @@ mod tests {
         assert_eq!(gs.get(60, 8), 0xFF);
     }
 
+    #[test]
+    fn string_size_minimum() {
+        // just making sure this bit of math works as we expect it to
+        assert_eq!(PIECE_SIZE_IN_BITS, 64);
+        assert_eq!(part_count_for_bits(0), 1);
+    }
+
     // proptest does some more intensive checks to ensure things like split numbers always work
     // or we don't trample non-overlapping numbers doing arithmetic.
 
     proptest! {
+        #[test]
+        fn string_size_blocks(blocks in 1..10) {
+            // just making sure this bit of math works as we expect it to
+            assert_eq!(PIECE_SIZE_IN_BITS, 64);
+            assert_eq!(part_count_for_bits(blocks as u64 * PIECE_SIZE_IN_BITS), blocks as u64);
+        }
+
+        #[test]
+        fn string_size_subblocks(blocks in 1..10, subblock in 1..32) {
+            // just making sure this bit of math works as we expect it to
+            assert_eq!(PIECE_SIZE_IN_BITS, 64);
+            assert_eq!(part_count_for_bits((blocks as u64 * PIECE_SIZE_IN_BITS) + subblock as u64), blocks as u64 + 1);
+        }
+
         #[test]
         fn get_set_single(start in 0..192, len in 1..64, value: u64) {
             // we're going to get and set values at various offsets and make sure we always get
