@@ -173,7 +173,7 @@ impl Genestring {
 
     // Copies bits starting from a given offset, up to offset+bits, from a donor genestring to this one.
     // The assumed usage of this function is to implement crossover between generations.
-    pub fn transplant(&mut self, donor: &mut Genestring, offset: u64, bits: u64) {
+    pub fn transplant(&mut self, donor: &Genestring, offset: u64, bits: u64) {
         let end = bits + offset;
 
         if end > self.bit_len() as u64 || end > donor.bit_len() as u64 {
