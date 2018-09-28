@@ -1,7 +1,10 @@
 #[macro_use] extern crate proptest;
 
-pub const PIECE_SIZE_IN_BYTES: u64 = 8;
-pub const PIECE_SIZE_IN_BITS: u64  = 64;
+pub mod constants;
+pub mod math;
+
+use constants::*;
+use math::*;
 
 const PANIC_OUT_OF_BOUNDS: &str = "Requested bits are out of bounds!";
 
@@ -16,7 +19,7 @@ impl Genestring {
         let mut result = Genestring{
             pieces: Vec::with_capacity(count as usize),
         };
-        result.pieces.resize(((count / PIECE_SIZE_IN_BITS) + 1) as usize, 0);
+        result.pieces.resize(part_count_for_bits(count) as usize, 0);
         result
     }
 
