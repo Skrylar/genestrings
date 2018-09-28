@@ -183,7 +183,23 @@ impl Genestring {
         let first_half_idx  = offset / PIECE_SIZE_IN_BITS;
         let second_half_idx = (bits + offset) / PIECE_SIZE_IN_BITS;
 
-        unimplemented!();
+        if first_half_idx == second_half_idx {
+            self.set(offset, bits, donor.get(offset, bits));
+        } else {
+            // middle sections can just be copied directly
+            for i in (first_half_idx+1)..(second_half_idx-1) {
+                self.pieces[i as usize] = donor.pieces[i as usize];
+            }
+
+            // copy first section
+            let bits = PIECE_SIZE_IN_BITS - (offset % PIECE_SIZE_IN_BITS);
+            self.set(offset, bits, donor.get(offset, bits));
+
+            // copy end section
+            let offset = second_half_idx * PIECE_SIZE_IN_BITS;
+            let bits = offset - ((bits + offset) % PIECE_SIZE_IN_BITS);
+            self.set(offset, bits, donor.get(offset, bits));
+        }
     }
 }
 
@@ -298,6 +314,22 @@ mod tests {
 
             prop_assert_eq!(gs.get(a as u64, 16), value_a as u64);
             prop_assert_eq!(gs.get(b as u64, 16), value_b as u64);
+        }
+
+        #[test]
+        fn transplanting_small_ranges(a in 0..16, b in 32..100, value_a: u16, value_b: u16) {
+            assert_eq!(PIECE_SIZE_IN_BITS, 64);
+            let mut gs  = Genestring::with_bits(128);
+            let mut gs2 = Genestring::with_bits(128);
+
+            gs.set(a as u64, 16, value_a as u64);
+            gs.set(b as u64, 16, value_b as u64);
+
+            gs2.transplant(&gs, a as u64, 16);
+            gs2.transplant(&gs, b as u64, 16);
+
+            prop_assert_eq!(gs2.get(a as u64, 16), value_a as u64);
+            prop_assert_eq!(gs2.get(b as u64, 16), value_b as u64);
         }
     }
 }
