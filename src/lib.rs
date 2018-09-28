@@ -212,8 +212,11 @@ mod tests {
     #[test]
     fn calculating_string_size() {
         // just making sure this bit of math works as we expect it to
-        assert_eq!(((7 / PIECE_SIZE_IN_BITS) + 1), 1);
-        assert_eq!(((70 / PIECE_SIZE_IN_BITS) + 1), 2);
+        assert_eq!(PIECE_SIZE_IN_BITS, 64);
+        assert_eq!(part_count_for_bits(7),   1);
+        assert_eq!(part_count_for_bits(64),  1);
+        assert_eq!(part_count_for_bits(128), 2);
+        assert_eq!(part_count_for_bits(70),  2);
     }
 
     #[test]
