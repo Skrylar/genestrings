@@ -58,49 +58,45 @@ impl Genestring {
         let first_half_idx  = (offset / PIECE_SIZE_IN_BITS) as usize;
         let second_half_idx = ((bits + offset) / PIECE_SIZE_IN_BITS) as usize;
 
+        let offset_modulo = offset % PIECE_SIZE_IN_BITS;
+
         let mut result: u64 = 0;
-        let mut result_b: u64 = 0;
 
         if first_half_idx != second_half_idx {
-            let first_half  = self.pieces[first_half_idx];
-            let second_half = self.pieces[second_half_idx];
+            // accumulator
+            let mut acc: u64 = 0;
 
-            let start = offset % PIECE_SIZE_IN_BITS;
-            let stop  = PIECE_SIZE_IN_BITS;
-
-            let piece = first_half;
-            for i in start..stop {
-                let mask = 1 << i;
-                result += piece & mask;
+            // calculate bit mask to use against value for first part
+            let p1_bits = PIECE_SIZE_IN_BITS - offset_modulo;
+            for i in 0..p1_bits {
+                acc += 1 << i;
             }
+            let value_mask1 = acc;
 
-            result >>= start;
-
-            let stop  = bits - (stop - start);
-            let start = 0;
-
-            let piece = second_half;
-            for i in start..stop {
-                let mask = 1 << i;
-                result_b += piece & mask;
+            // calculate bit mask to use against value for second part
+            let p2_bits = bits - p1_bits;
+            acc = 0;
+            for i in 0..p2_bits {
+                acc += 1 << i;
             }
+            let piece_mask2 = acc;
+            acc <<= p1_bits;
+            let value_mask2 = acc;
 
-            result_b <<= bits - stop;
+            let piece_mask1 = value_mask1 << offset_modulo;
 
-            result |= result_b;
+            result  = (self.pieces[first_half_idx]  & piece_mask1) >> offset_modulo;
+            result += (self.pieces[second_half_idx] & piece_mask2) << p1_bits;
         } else {
             let first_half  = self.pieces[first_half_idx];
 
-            let start = offset % PIECE_SIZE_IN_BITS;
-            let stop  = start + bits;
-
             let piece = first_half;
-            for i in start..stop {
+            for i in offset_modulo..(offset_modulo+bits) {
                 let mask = 1 << i;
                 result += piece & mask;
             }
 
-            result >>= start;
+            result >>= offset_modulo;
         }
 
         result
@@ -149,36 +145,30 @@ impl Genestring {
 
             self.pieces[first_half_idx] = (self.pieces[first_half_idx] & !destination_mask) + ((value as u64 & source_mask) << offset_modulo);
         } else {
-            let first_half  = self.pieces[first_half_idx];
-            let second_half = self.pieces[second_half_idx];
+            // accumulator
+            let mut acc: u64 = 0;
 
-            let start = offset % PIECE_SIZE_IN_BITS;
-            let stop  = PIECE_SIZE_IN_BITS;
-
-            let piece = first_half;
-            let mut piece_mask = 0;
-            let mut value_mask = 0;
-
-            for i in start..stop {
-                piece_mask += 1 << i;
-                value_mask = (value_mask << 1) + 1;
+            // calculate bit mask to use against value for first part
+            let p1_bits = PIECE_SIZE_IN_BITS - offset_modulo;
+            for i in 0..p1_bits {
+                acc += 1 << i;
             }
+            let value_mask1 = acc;
 
-            self.pieces[first_half_idx] = (piece & !piece_mask) | ((value as u64 & value_mask) << start);
-
-            let stop  = bits - (stop - start);
-            let start = 0;
-
-            let piece = second_half;
-            piece_mask = 0;
-            value_mask = 0;
-            for i in start..stop {
-                piece_mask += 1 << i;
-                value_mask = (value_mask << 1) + 1;
+            // calculate bit mask to use against value for second part
+            let p2_bits = bits - p1_bits;
+            acc = 0;
+            for i in 0..p2_bits {
+                acc += 1 << i;
             }
-            value_mask <<= bits - stop;
+            let piece_mask2 = acc;
+            acc <<= p1_bits;
+            let value_mask2 = acc;
 
-            self.pieces[second_half_idx] = (piece & !piece_mask) | ((value as u64 & value_mask) >> (bits - stop));
+            let piece_mask1 = value_mask1 << offset_modulo;
+
+            self.pieces[first_half_idx]  = (self.pieces[first_half_idx]  & !piece_mask1) + ((value & value_mask1) << offset_modulo);
+            self.pieces[second_half_idx] = (self.pieces[second_half_idx] & !piece_mask2) + ((value & value_mask2) >> p1_bits);
         }
     }
 
