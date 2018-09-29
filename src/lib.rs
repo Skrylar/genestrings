@@ -1,5 +1,6 @@
 #[allow(unused_imports)]
-#[macro_use] extern crate proptest;
+#[macro_use]
+extern crate proptest;
 
 pub mod constants;
 pub mod math;
@@ -17,7 +18,7 @@ pub struct Genestring {
 impl Genestring {
     /// Creates a gene string capable of holding at least `count` bits.
     pub fn with_bits(count: u64) -> Genestring {
-        let mut result = Genestring{
+        let mut result = Genestring {
             pieces: Vec::with_capacity(count as usize),
         };
         result.pieces.resize(part_count_for_bits(count) as usize, 0);
@@ -43,7 +44,7 @@ impl Genestring {
     // `bits` is larger than 64 or would otherwise go outside the bounds of the string.
     pub fn get(&self, offset: u64, bits: u64) -> u64 {
         if bits == 0 {
-            return 0
+            return 0;
         }
 
         // safety dance
@@ -56,7 +57,7 @@ impl Genestring {
         }
 
         // safety dance complete, now figure out which pieces have our bits
-        let first_half_idx  = part_for_bit(offset) as usize;
+        let first_half_idx = part_for_bit(offset) as usize;
         let second_half_idx = part_for_bit(offset + (bits - 1)) as usize;
 
         let offset_modulo = offset % PIECE_SIZE_IN_BITS;
@@ -84,13 +85,13 @@ impl Genestring {
 
             let piece_mask1 = value_mask1 << offset_modulo;
 
-            result  = (self.pieces[first_half_idx]  & piece_mask1) >> offset_modulo;
+            result = (self.pieces[first_half_idx] & piece_mask1) >> offset_modulo;
             result += (self.pieces[second_half_idx] & piece_mask2) << p1_bits;
         } else {
-            let first_half  = self.pieces[first_half_idx];
+            let first_half = self.pieces[first_half_idx];
 
             let piece = first_half;
-            for i in offset_modulo..(offset_modulo+bits) {
+            for i in offset_modulo..(offset_modulo + bits) {
                 let mask = 1 << i;
                 result += piece & mask;
             }
@@ -104,7 +105,8 @@ impl Genestring {
     // Fills each piece of the genestring from a supplied fill function.
     // The assumed usage of this function is for inserting random values for new DNA.
     pub fn fill<F>(&mut self, mut filler: F)
-        where F: FnMut() -> u64
+    where
+        F: FnMut() -> u64,
     {
         for i in self.pieces.iter_mut() {
             *i = filler();
@@ -115,7 +117,7 @@ impl Genestring {
     // The assumed usage of this function is to implement mutation.
     pub fn set(&mut self, offset: u64, bits: u64, value: u64) {
         if bits == 0 {
-            return
+            return;
         }
 
         // safety dance
@@ -127,7 +129,7 @@ impl Genestring {
             panic!(PANIC_OUT_OF_BOUNDS);
         }
 
-        let first_half_idx  = part_for_bit(offset) as usize;
+        let first_half_idx = part_for_bit(offset) as usize;
         let second_half_idx = part_for_bit(offset + (bits - 1)) as usize;
 
         let mut source_mask = 0;
@@ -142,7 +144,8 @@ impl Genestring {
 
             let destination_mask = source_mask << offset_modulo;
 
-            self.pieces[first_half_idx] = (self.pieces[first_half_idx] & !destination_mask) + ((value as u64 & source_mask) << offset_modulo);
+            self.pieces[first_half_idx] = (self.pieces[first_half_idx] & !destination_mask)
+                + ((value as u64 & source_mask) << offset_modulo);
         } else {
             // accumulator
             let mut acc: u64 = 0;
@@ -166,8 +169,10 @@ impl Genestring {
 
             let piece_mask1 = value_mask1 << offset_modulo;
 
-            self.pieces[first_half_idx]  = (self.pieces[first_half_idx]  & !piece_mask1) + ((value & value_mask1) << offset_modulo);
-            self.pieces[second_half_idx] = (self.pieces[second_half_idx] & !piece_mask2) + ((value & value_mask2) >> p1_bits);
+            self.pieces[first_half_idx] = (self.pieces[first_half_idx] & !piece_mask1)
+                + ((value & value_mask1) << offset_modulo);
+            self.pieces[second_half_idx] =
+                (self.pieces[second_half_idx] & !piece_mask2) + ((value & value_mask2) >> p1_bits);
         }
     }
 
@@ -183,25 +188,33 @@ impl Genestring {
         if bits <= 64 {
             self.set(offset, bits, donor.get(offset, bits));
         } else {
-            let mut offset  = offset;
+            let mut offset = offset;
             let bit_windows = bits / PIECE_SIZE_IN_BITS;
             for _ in 0..bit_windows {
-                self.set(offset, PIECE_SIZE_IN_BITS, donor.get(offset, PIECE_SIZE_IN_BITS));
+                self.set(
+                    offset,
+                    PIECE_SIZE_IN_BITS,
+                    donor.get(offset, PIECE_SIZE_IN_BITS),
+                );
                 offset += PIECE_SIZE_IN_BITS;
             }
-            self.set(offset, bits % PIECE_SIZE_IN_BITS, donor.get(offset, bits % PIECE_SIZE_IN_BITS));
+            self.set(
+                offset,
+                bits % PIECE_SIZE_IN_BITS,
+                donor.get(offset, bits % PIECE_SIZE_IN_BITS),
+            );
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use ::*;
+    use *;
 
     #[test]
     fn assume_intdiv_rounds_down() {
-        assert_eq!(4/5, 0);
-        assert_eq!(7/5, 1);
+        assert_eq!(4 / 5, 0);
+        assert_eq!(7 / 5, 1);
     }
 
     #[test]
@@ -212,13 +225,13 @@ mod tests {
         let mut total = 0;
 
         let start = offset % PIECE_SIZE_IN_BITS;
-        let stop  = PIECE_SIZE_IN_BITS;
+        let stop = PIECE_SIZE_IN_BITS;
 
         for _ in start..stop {
             total += 1;
         }
 
-        let stop  = bits - (stop - start);
+        let stop = bits - (stop - start);
         let start = 0;
 
         for _ in start..stop {
