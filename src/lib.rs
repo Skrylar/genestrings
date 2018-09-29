@@ -41,6 +41,10 @@ impl Genestring {
     // Retrieves `bits` number of bits from the string, starting at a given `offset`. Panics if
     // `bits` is larger than 64 or would otherwise go outside the bounds of the string.
     pub fn get(&self, offset: u64, bits: u64) -> u64 {
+        if bits == 0 {
+            return 0
+        }
+        
         // safety dance
         if bits > 64 {
             panic!("Can only obtain 64 bits at a time!");
@@ -115,6 +119,10 @@ impl Genestring {
     // Assigns bits at a given offset through offset+bits to the given value.
     // The assumed usage of this function is to implement mutation.
     pub fn set(&mut self, offset: u64, bits: u64, value: u64) {
+        if bits == 0 {
+            return
+        }
+
         // safety dance
         if bits > 64 {
             panic!("Can only write 64 bits at a time!");
