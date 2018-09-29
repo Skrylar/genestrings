@@ -310,7 +310,7 @@ mod tests {
         }
 
         #[test]
-        fn get_set_1piece_duo(a in 0..16, b in 32..64, value_a: u16, value_b: u16) {
+        fn get_set_1piece_duo(a in 0..16, b in 32..48, value_a: u16, value_b: u16) {
             // We are going to store two values within the same piece, guaranteed not to overlap,
             // and ensure they do not trample one another.
 
