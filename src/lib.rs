@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 #[macro_use] extern crate proptest;
 
 pub mod constants;
@@ -44,7 +45,7 @@ impl Genestring {
         if bits == 0 {
             return 0
         }
-        
+
         // safety dance
         if bits > 64 {
             panic!("Can only obtain 64 bits at a time!");
@@ -80,8 +81,6 @@ impl Genestring {
                 acc += 1 << i;
             }
             let piece_mask2 = acc;
-            acc <<= p1_bits;
-            let value_mask2 = acc;
 
             let piece_mask1 = value_mask1 << offset_modulo;
 
