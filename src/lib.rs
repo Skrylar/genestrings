@@ -55,8 +55,8 @@ impl Genestring {
         }
 
         // safety dance complete, now figure out which pieces have our bits
-        let first_half_idx  = (offset / PIECE_SIZE_IN_BITS) as usize;
-        let second_half_idx = ((bits + offset) / PIECE_SIZE_IN_BITS) as usize;
+        let first_half_idx  = part_for_bit(offset) as usize;
+        let second_half_idx = part_for_bit(offset + (bits - 1)) as usize;
 
         let offset_modulo = offset % PIECE_SIZE_IN_BITS;
 
@@ -129,7 +129,7 @@ impl Genestring {
         }
 
         let first_half_idx  = part_for_bit(offset) as usize;
-        let second_half_idx = part_for_bit(offset + bits) as usize;
+        let second_half_idx = part_for_bit(offset + (bits - 1)) as usize;
 
         let mut source_mask = 0;
 
