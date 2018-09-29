@@ -15,6 +15,16 @@ pub struct Genestring {
     pieces: Vec<u64>,
 }
 
+pub struct Writer<'a> {
+    parent: &'a mut Genestring,
+    offset: u64
+}
+
+pub struct Reader<'a> {
+    parent: &'a mut Genestring,
+    offset: u64
+}
+
 impl Genestring {
     /// Creates a gene string capable of holding at least `count` bits.
     pub fn with_bits(count: u64) -> Genestring {
@@ -23,6 +33,16 @@ impl Genestring {
         };
         result.pieces.resize(part_count_for_bits(count) as usize, 0);
         result
+    }
+
+    /// Returns a helper for writing values in to the genestring.
+    pub fn writer(&mut self) -> Writer {
+        Writer { parent: self, offset: 0 }
+    }
+
+    /// Returns a helper for reading values from the genestring.
+    pub fn reader(&mut self) -> Reader {
+        Reader { parent: self, offset: 0 }
     }
 
     // Returns the number of bits in the gene string.
@@ -208,6 +228,25 @@ impl Genestring {
                 donor.get(offset, bits % PIECE_SIZE_IN_BITS),
             );
         }
+    }
+}
+
+impl<'a> Writer<'a> {
+    /// Pushes a value in to the bit string, then increments the writer's offset by the number
+    /// of bits written.
+    pub fn push(&mut self, bits: u64, value: u64) {
+        self.parent.set(self.offset, bits, value);
+        self.offset += bits;
+    }
+}
+
+impl<'a> Reader<'a> {
+    /// Reads the next `bits` bits from the string, then increments the reader's offset by the
+    /// number of bits read.
+    pub fn next(&mut self, bits: u64) -> u64 {
+        let result = self.parent.get(self.offset, bits);
+        self.offset += bits;
+        result
     }
 }
 
