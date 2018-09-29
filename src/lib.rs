@@ -15,11 +15,13 @@ pub struct Genestring {
     pieces: Vec<u64>,
 }
 
+/// Helper to write sequential bits in a gene string.
 pub struct Writer<'a> {
     parent: &'a mut Genestring,
     offset: u64
 }
 
+/// Helper to read sequential bits from a gene string.
 pub struct Reader<'a> {
     parent: &'a mut Genestring,
     offset: u64
@@ -45,17 +47,17 @@ impl Genestring {
         Reader { parent: self, offset: 0 }
     }
 
-    // Returns the number of bits in the gene string.
+    /// Returns the number of bits in the gene string.
     pub fn bit_len(&self) -> usize {
         self.pieces.len() * PIECE_SIZE_IN_BITS as usize
     }
 
-    // Returns the number of bytes in the gene string.
+    /// Returns the number of bytes in the gene string.
     pub fn byte_len(&self) -> usize {
         self.pieces.len() * PIECE_SIZE_IN_BYTES as usize
     }
 
-    // Returns the number of integer parts of the gene string.
+    /// Returns the number of integer parts of the gene string.
     pub fn len(&self) -> usize {
         self.pieces.len()
     }
@@ -64,8 +66,8 @@ impl Genestring {
         self.pieces.is_empty()
     }
 
-    // Retrieves `bits` number of bits from the string, starting at a given `offset`. Panics if
-    // `bits` is larger than 64 or would otherwise go outside the bounds of the string.
+    /// Retrieves `bits` number of bits from the string, starting at a given `offset`. Panics if
+    /// `bits` is larger than 64 or would otherwise go outside the bounds of the string.
     pub fn get(&self, offset: u64, bits: u64) -> u64 {
         if bits == 0 {
             return 0;
@@ -126,19 +128,17 @@ impl Genestring {
         result
     }
 
-    // Fills each piece of the genestring from a supplied fill function.
-    // The assumed usage of this function is for inserting random values for new DNA.
-    pub fn fill<F>(&mut self, mut filler: F)
-    where
-        F: FnMut() -> u64,
-    {
-        for i in self.pieces.iter_mut() {
-            *i = filler();
-        }
+    /// Provides an immutable iterator for the gene string's internal bank of integers.
+    pub fn piece_iter(&self) -> std::slice::Iter<'_, u64> {
+        self.pieces.iter()
     }
 
-    // Assigns bits at a given offset through offset+bits to the given value.
-    // The assumed usage of this function is to implement mutation.
+    /// Provides a mutable iterator for the gene string's internal bank of integers.
+    pub fn piece_iter_mut(&mut self) -> std::slice::IterMut<'_, u64> {
+        self.pieces.iter_mut()
+    }
+
+    /// Assigns a value at the given bit offset and bit length.
     pub fn set(&mut self, offset: u64, bits: u64, value: u64) {
         if bits == 0 {
             return;
@@ -200,8 +200,10 @@ impl Genestring {
         }
     }
 
-    // Copies bits starting from a given offset, up to offset+bits, from a donor genestring to this one.
-    // The assumed usage of this function is to implement crossover between generations.
+    /// Copies bits from a given offset and bit length from a donor to self.
+    /// Both strings do not need to be the same total length, but the range being copied must
+    /// be valid and the same for both donor and self.
+    /// Used to implement crossover.
     pub fn transplant(&mut self, donor: &Genestring, offset: u64, bits: u64) {
         let end = bits + offset;
 
