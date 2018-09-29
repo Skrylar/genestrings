@@ -300,9 +300,11 @@ mod tests {
         }
 
         #[test]
-        fn get_set_single(start in 0..192, len in 1..64, value: u64) {
+        fn get_set_single(start in 0..256, len in 1..64, value: u64) {
             // we're going to get and set values at various offsets and make sure we always get
             // back the thing we wanted to start with
+
+            prop_assume!((start + len) < 256, "Value must be within bit string boundaries.");
 
             assert_eq!(PIECE_SIZE_IN_BITS, 64);
             let mut gs = Genestring::with_bits(256);
