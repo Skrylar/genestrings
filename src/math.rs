@@ -13,11 +13,5 @@ pub fn part_count_for_bits(bits: u64) -> u64 {
 
 // Calculates which piece contains a given bit.
 pub fn part_for_bit(bit: u64) -> u64 {
-    if bit == 0 {
-        0
-    } else if bit % PIECE_SIZE_IN_BITS == 0 {
-        (bit / PIECE_SIZE_IN_BITS) - 1
-    } else {
-        bit / PIECE_SIZE_IN_BITS
-    }
+    bit / PIECE_SIZE_IN_BITS
 }
