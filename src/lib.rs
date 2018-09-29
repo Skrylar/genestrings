@@ -124,8 +124,8 @@ impl Genestring {
             panic!(PANIC_OUT_OF_BOUNDS);
         }
 
-        let first_half_idx  = (offset / PIECE_SIZE_IN_BITS) as usize;
-        let second_half_idx = ((bits + offset) / PIECE_SIZE_IN_BITS) as usize;
+        let first_half_idx  = part_for_bit(offset) as usize;
+        let second_half_idx = part_for_bit(offset + bits) as usize;
 
         let mut source_mask = 0;
 
@@ -183,8 +183,8 @@ impl Genestring {
             panic!(PANIC_OUT_OF_BOUNDS);
         }
 
-        let first_half_idx  = offset / PIECE_SIZE_IN_BITS;
-        let second_half_idx = (bits + offset) / PIECE_SIZE_IN_BITS;
+        let first_half_idx  = part_for_bit(offset) as usize;
+        let second_half_idx = part_for_bit(offset + bits) as usize;
 
         if first_half_idx == second_half_idx {
             self.set(offset, bits, donor.get(offset, bits));
