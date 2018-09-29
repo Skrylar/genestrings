@@ -198,7 +198,7 @@ impl Genestring {
             self.set(offset, bits, donor.get(offset, bits));
         } else {
             // middle sections can just be copied directly
-            for i in (first_half_idx+1)..(second_half_idx-1) {
+            for i in (first_half_idx+1)..second_half_idx {
                 self.pieces[i as usize] = donor.pieces[i as usize];
             }
 
@@ -207,8 +207,8 @@ impl Genestring {
             self.set(offset, bits, donor.get(offset, bits));
 
             // copy end section
-            let offset = second_half_idx * PIECE_SIZE_IN_BITS;
-            let bits = offset - ((bits + offset) % PIECE_SIZE_IN_BITS);
+            let offset = second_half_idx as u64 * PIECE_SIZE_IN_BITS;
+            let bits   = second_half_idx as u64 % PIECE_SIZE_IN_BITS;
             self.set(offset, bits, donor.get(offset, bits));
         }
     }
