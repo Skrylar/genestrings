@@ -211,6 +211,12 @@ mod tests {
     use ::*;
 
     #[test]
+    fn assume_intdiv_rounds_down() {
+        assert_eq!(4/5, 0);
+        assert_eq!(7/5, 1);
+    }
+
+    #[test]
     fn calculating_bi_offsets() {
         // just making sure the way we do bit offsets is correct
         let offset = 50;
