@@ -355,5 +355,47 @@ mod tests {
             prop_assert_eq!(gs2.get(a as u64, 16), value_a as u64);
             prop_assert_eq!(gs2.get(b as u64, 16), value_b as u64);
         }
+
+        #[test]
+        fn transplanting_small_ranges_blocked(a in 0..8, b in 0..8, value_a: u16, value_b: u16) {
+            assert_eq!(PIECE_SIZE_IN_BITS, 64);
+            prop_assume!(a != b, "Blocks cannot overlap.");
+
+            let mut gs  = Genestring::with_bits(8 * 16);
+            let mut gs2 = Genestring::with_bits(8 * 16);
+
+            gs.set(a as u64 * 16, 16, value_a as u64);
+            gs.set(b as u64 * 16, 16, value_b as u64);
+
+            gs2.transplant(&gs, a as u64 * 16, 16);
+            gs2.transplant(&gs, b as u64 * 16, 16);
+
+            prop_assert_eq!(gs2.get(a as u64 * 16, 16), value_a as u64);
+            prop_assert_eq!(gs2.get(b as u64 * 16, 16), value_b as u64);
+        }
+
+        #[test]
+        fn transplanting_large_ranges(a in 0..16, b in 0..16, value_a: u16, value_b: u16) {
+            prop_assume!(a != b, "Overlapping is not allowed.");
+
+            assert_eq!(PIECE_SIZE_IN_BITS, 64);
+            let mut gs  = Genestring::with_bits(16 * 16);
+            let mut gs2 = Genestring::with_bits(16 * 16);
+
+            gs.set((a * 16) as u64, 16, value_a as u64);
+            prop_assert_eq!(gs.get(a as u64 * 16, 16), value_a as u64);
+            gs.set((b * 16) as u64, 16, value_b as u64);
+            prop_assert_eq!(gs.get(a as u64 * 16, 16), value_a as u64);
+            prop_assert_eq!(gs.get(b as u64 * 16, 16), value_b as u64);
+
+            //gs2.transplant(&gs, (a * 16) as u64, ((b * 16) as u64 + 16) - (a * 16) as u64);
+            gs2.transplant(&gs, 0, 16 * 16);
+
+            prop_assert_eq!(gs.get(a as u64 * 16, 16), value_a as u64);
+            prop_assert_eq!(gs.get(b as u64 * 16, 16), value_b as u64);
+
+            prop_assert_eq!(gs2.get(a as u64 * 16, 16), value_a as u64);
+            prop_assert_eq!(gs2.get(b as u64 * 16, 16), value_b as u64);
+        }
     }
 }
