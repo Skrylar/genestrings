@@ -341,7 +341,7 @@ mod tests {
         }
 
         #[test]
-        fn transplanting_small_ranges(a in 0..16, b in 32..100, value_a: u16, value_b: u16) {
+        fn transplanting_small_ranges(a in 0..32, b in 64..100, value_a: u16, value_b: u16) {
             assert_eq!(PIECE_SIZE_IN_BITS, 64);
             let mut gs  = Genestring::with_bits(128);
             let mut gs2 = Genestring::with_bits(128);
