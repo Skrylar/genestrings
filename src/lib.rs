@@ -40,6 +40,10 @@ impl Genestring {
         self.pieces.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.pieces.is_empty()
+    }
+
     // Retrieves `bits` number of bits from the string, starting at a given `offset`. Panics if
     // `bits` is larger than 64 or would otherwise go outside the bounds of the string.
     pub fn get(&self, offset: u64, bits: u64) -> u64 {
