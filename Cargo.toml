@@ -2,6 +2,10 @@
 name = "genestring"
 version = "0.1.0"
 authors = ["Joshua Cearley <joshua.cearley@gmail.com>"]
+repository = "https://github.com/Skrylar/genestrings"
+readme = "README.md"
+categories = ["data-structures"]
+license = "BSD-3-Clause"
 
 [dependencies]
 proptest = "0.8.7"
