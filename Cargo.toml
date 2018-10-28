@@ -6,6 +6,7 @@ repository = "https://github.com/Skrylar/genestrings"
 readme = "README.md"
 categories = ["data-structures"]
 license = "BSD-3-Clause"
+description = "Treat big strings of bits like integer slices!"
 
 [dependencies]
 proptest = "0.8.7"
